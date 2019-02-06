@@ -8,7 +8,7 @@ import socket
 import struct
 import sys
 
-from . import TTransportException
+from . import TTransportException, readall
 
 
 class TSocket(object):
@@ -124,6 +124,9 @@ class TSocket(object):
             raise TTransportException(type=TTransportException.END_OF_FILE,
                                       message='TSocket read 0 bytes')
         return buff
+    
+    def readAll(self, sz):
+        return readall(self.read, sz)
 
     def write(self, buff):
         self.sock.sendall(buff)
