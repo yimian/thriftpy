@@ -161,15 +161,15 @@ def write_val(outbuf, ttype, val, spec=None):
 
 
 def read_message_begin(inbuf, strict=True):
-    sz = unpack_i32(inbuf.read(4))
+    sz = unpack_i32(inbuf.readAll(4))
     if sz < 0:
         version = sz & VERSION_MASK
         if version != VERSION_1:
             raise TProtocolException(
                 type=TProtocolException.BAD_VERSION,
                 message='Bad version in read_message_begin: %d' % (sz))
-        name_sz = unpack_i32(inbuf.read(4))
-        name = inbuf.read(name_sz).decode('utf-8')
+        name_sz = unpack_i32(inbuf.readAll(4))
+        name = inbuf.readAll(name_sz).decode('utf-8')
 
         type_ = sz & TYPE_MASK
     else:
@@ -177,56 +177,56 @@ def read_message_begin(inbuf, strict=True):
             raise TProtocolException(type=TProtocolException.BAD_VERSION,
                                      message='No protocol version header')
 
-        name = inbuf.read(sz).decode('utf-8')
-        type_ = unpack_i8(inbuf.read(1))
+        name = inbuf.readAll(sz).decode('utf-8')
+        type_ = unpack_i8(inbuf.readAll(1))
 
-    seqid = unpack_i32(inbuf.read(4))
+    seqid = unpack_i32(inbuf.readAll(4))
 
     return name, type_, seqid
 
 
 def read_field_begin(inbuf):
-    f_type = unpack_i8(inbuf.read(1))
+    f_type = unpack_i8(inbuf.readAll(1))
     if f_type == TType.STOP:
         return f_type, 0
 
-    return f_type, unpack_i16(inbuf.read(2))
+    return f_type, unpack_i16(inbuf.readAll(2))
 
 
 def read_list_begin(inbuf):
-    e_type = unpack_i8(inbuf.read(1))
-    sz = unpack_i32(inbuf.read(4))
+    e_type = unpack_i8(inbuf.readAll(1))
+    sz = unpack_i32(inbuf.readAll(4))
     return e_type, sz
 
 
 def read_map_begin(inbuf):
-    k_type, v_type = unpack_i8(inbuf.read(1)), unpack_i8(inbuf.read(1))
-    sz = unpack_i32(inbuf.read(4))
+    k_type, v_type = unpack_i8(inbuf.readAll(1)), unpack_i8(inbuf.readAll(1))
+    sz = unpack_i32(inbuf.readAll(4))
     return k_type, v_type, sz
 
 
 def read_val(inbuf, ttype, spec=None, decode_response=True):
     if ttype == TType.BOOL:
-        return bool(unpack_i8(inbuf.read(1)))
+        return bool(unpack_i8(inbuf.readAll(1)))
 
     elif ttype == TType.BYTE:
-        return unpack_i8(inbuf.read(1))
+        return unpack_i8(inbuf.readAll(1))
 
     elif ttype == TType.I16:
-        return unpack_i16(inbuf.read(2))
+        return unpack_i16(inbuf.readAll(2))
 
     elif ttype == TType.I32:
-        return unpack_i32(inbuf.read(4))
+        return unpack_i32(inbuf.readAll(4))
 
     elif ttype == TType.I64:
-        return unpack_i64(inbuf.read(8))
+        return unpack_i64(inbuf.readAll(8))
 
     elif ttype == TType.DOUBLE:
-        return unpack_double(inbuf.read(8))
+        return unpack_double(inbuf.readAll(8))
 
     elif ttype == TType.STRING:
-        sz = unpack_i32(inbuf.read(4))
-        byte_payload = inbuf.read(sz)
+        sz = unpack_i32(inbuf.readAll(4))
+        byte_payload = inbuf.readAll(sz)
 
         # Since we cannot tell if we're getting STRING or BINARY
         # if not asked not to decode, try both
@@ -317,22 +317,22 @@ def read_struct(inbuf, obj, decode_response=True):
 
 def skip(inbuf, ftype):
     if ftype == TType.BOOL or ftype == TType.BYTE:
-        inbuf.read(1)
+        inbuf.readAll(1)
 
     elif ftype == TType.I16:
-        inbuf.read(2)
+        inbuf.readAll(2)
 
     elif ftype == TType.I32:
-        inbuf.read(4)
+        inbuf.readAll(4)
 
     elif ftype == TType.I64:
-        inbuf.read(8)
+        inbuf.readAll(8)
 
     elif ftype == TType.DOUBLE:
-        inbuf.read(8)
+        inbuf.readAll(8)
 
     elif ftype == TType.STRING:
-        inbuf.read(unpack_i32(inbuf.read(4)))
+        inbuf.readAll(unpack_i32(inbuf.readAll(4)))
 
     elif ftype == TType.SET or ftype == TType.LIST:
         v_type, sz = read_list_begin(inbuf)
